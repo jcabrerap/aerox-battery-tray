@@ -14,6 +14,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import time
 
 from PyQt6.QtCore import QRect, Qt, QTimer
 from PyQt6.QtGui import QAction, QColor, QCursor, QFont, QIcon, QPainter, QPixmap
@@ -211,7 +212,12 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
-    if not QSystemTrayIcon.isSystemTrayAvailable():
+    # At login the panel may not be ready yet, so wait up to a minute for the tray
+    for _ in range(30):
+        if QSystemTrayIcon.isSystemTrayAvailable():
+            break
+        time.sleep(2)
+    else:
         print("No system tray available.", file=sys.stderr)
         return 1
     _tray = BatteryTray(app)  # noqa: F841 (must stay alive)
